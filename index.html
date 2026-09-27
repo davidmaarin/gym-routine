@@ -15,12 +15,14 @@
     --bg: #f6f5f4; --card: #ffffff; --text: #1f1a17; --muted: #72695f;
     --border: #e4dfda; --accent: #ea580c; --on-accent: #ffffff; --accent-soft: #fdeee4;
     --danger: #dc2626; --ok: #16a34a; --ok-soft: #e7f6ec; --gold: #ca8a04;
+    --h1: #fdd8bf; --h2: #fbac78; --h3: #f47b35; --h4: #c2410c;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #12100f; --card: #1c1917; --text: #ede9e6; --muted: #a39a92;
       --border: #2f2a26; --accent: #fb923c; --on-accent: #1c1006; --accent-soft: #2e1d10;
       --danger: #f87171; --ok: #4ade80; --ok-soft: #14291c; --gold: #facc15;
+      --h1: #4a2511; --h2: #7c3a12; --h3: #c2570f; --h4: #fb923c;
     }
   }
   * { box-sizing: border-box; }
@@ -162,6 +164,23 @@
   .set .okb:hover { color: var(--ok); }
   .ex-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
 
+  /* Calendario mensual */
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 380px; margin: 0 auto; }
+  .cal .dh { font-size: 11px; color: var(--muted); text-align: center; font-weight: 600; }
+  .cal .d {
+    aspect-ratio: 1; border-radius: 6px; background: var(--bg); border: 1px solid var(--border);
+    font-size: 11px; color: var(--muted); display: flex; align-items: flex-start; justify-content: flex-end;
+    padding: 3px 5px; cursor: pointer; font-variant-numeric: tabular-nums;
+  }
+  .cal .d.l1 { background: var(--h1); border-color: var(--h1); color: var(--text); }
+  .cal .d.l2 { background: var(--h2); border-color: var(--h2); color: var(--text); }
+  .cal .d.l3 { background: var(--h3); border-color: var(--h3); color: #fff; }
+  .cal .d.l4 { background: var(--h4); border-color: var(--h4); color: #fff; }
+  .cal .d.plan { border: 1.5px dashed var(--accent); }
+  .cal .d.today { outline: 2px solid var(--text); outline-offset: 1px; }
+  .cal .d.future { opacity: .55; }
+  .heat-leg { display: flex; align-items: center; justify-content: flex-end; gap: 3px; font-size: 11px; color: var(--muted); margin-top: 10px; }
+  .heat-leg i { width: 12px; height: 12px; border-radius: 3px; background: var(--bg); border: 1px solid var(--border); }
   /* Progreso */
   .weeknav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .weeknav b { font-size: 14px; }
@@ -271,7 +290,7 @@ function save() {
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
-const ui = { tab: 'hoy', date: today(), weekOff: 0, progEx: null, metric: 'e1rm', histN: 15 };
+const ui = { tab: 'hoy', date: today(), weekOff: 0, monthOff: 0, progEx: null, metric: 'e1rm', histN: 15 };
 
 const exById = id => S.exercises.find(e => e.id === id);
 const exName = id => exById(id)?.name ?? '(ejercicio borrado)';
@@ -454,6 +473,49 @@ function vEj() {
   return h + `</div>`;
 }
 
+// Calendario del mes estilo GitHub: más series ese día → cuadro más intenso
+function vMonth() {
+  const t = parseYmd(today()), first = new Date(t.getFullYear(), t.getMonth() + ui.monthOff, 1);
+  const y = first.getFullYear(), m = first.getMonth(), nd = new Date(y, m + 1, 0).getDate();
+  const ms = ymd(first), me = ymd(new Date(y, m, nd));
+  const sets = {};
+  for (const s of S.sessions) if (s.date >= ms && s.date <= me) {
+    const n = sessStats(s).n; if (n) sets[s.date] = (sets[s.date] || 0) + n;
+  }
+  const max = Math.max(1, ...Object.values(sets));
+  const lvl = n => n ? Math.min(4, Math.ceil(n / max * 4)) : 0;
+  const td = today();
+  let trained = 0, planned = 0, totSets = 0;
+  let cells = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<span class="dh">${d}</span>`).join('');
+  cells += '<span></span>'.repeat(dow(ms));
+  for (let i = 1; i <= nd; i++) {
+    const d = ymd(new Date(y, m, i)), n = sets[d] || 0, isPlan = !!routineById(S.week[dow(d)]);
+    if (n) { trained++; totSets += n; }
+    if (isPlan) planned++;
+    const cls = [`l${lvl(n)}`, d === td ? 'today' : '', d > td ? 'future' : '', !n && isPlan && d >= td ? 'plan' : ''].join(' ');
+    const tip = `${cap(fmtDate(d, { weekday: 'long', day: 'numeric', month: 'long' }))}: ${n ? n + ' series' : isPlan ? 'planificado' : 'sin entreno'}`;
+    cells += `<span class="d ${cls}" title="${esc(tip)}" data-act="openDay" data-date="${d}">${i}</span>`;
+  }
+  // Racha: semanas seguidas con al menos un entreno (la semana actual no la rompe si aún no has entrenado)
+  const trainedDays = new Set(S.sessions.filter(s => sessStats(s).n).map(s => s.date));
+  let streak = 0, w = weekStart(td);
+  const hasWeek = ws => [...Array(7)].some((_, k) => trainedDays.has(addDays(ws, k)));
+  if (hasWeek(w)) streak++;
+  for (w = addDays(w, -7); hasWeek(w); w = addDays(w, -7)) streak++;
+  const title = cap(first.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }));
+  return `<div class="card"><h2>Constancia</h2>
+    <div class="weeknav"><button class="icon nav edit" data-act="month" data-n="-1" aria-label="Mes anterior">‹</button>
+      <b>${esc(title)}</b>
+      <button class="icon nav edit" data-act="month" data-n="1" aria-label="Mes siguiente" ${ui.monthOff >= 0 ? 'disabled style="opacity:.3"' : ''}>›</button></div>
+    <div class="cal">${cells}</div>
+    <div class="heat-leg">Menos <i></i><i style="background:var(--h1);border-color:var(--h1)"></i><i style="background:var(--h2);border-color:var(--h2)"></i><i style="background:var(--h3);border-color:var(--h3)"></i><i style="background:var(--h4);border-color:var(--h4)"></i> Más</div>
+    <div class="stats">
+      <div class="stat"><b>${trained}${planned ? `<small class="muted" style="font-size:13px"> / ${planned}</small>` : ''}</b><span>días entrenados${planned ? ' / planificados' : ''}</span></div>
+      <div class="stat"><b>${totSets}</b><span>series en el mes</span></div>
+      <div class="stat"><b>${streak}${streak >= 4 ? ' 🔥' : ''}</b><span>semana${streak === 1 ? '' : 's'} seguida${streak === 1 ? '' : 's'}</span></div>
+    </div></div>`;
+}
+
 function vProg() {
   // --- Volumen semanal por músculo ---
   const ws = addDays(weekStart(today()), 7 * ui.weekOff), we = addDays(ws, 6);
@@ -464,7 +526,7 @@ function vProg() {
   S.week.forEach(rid => { const r = routineById(rid); if (r) r.items.forEach(it => { const m = exMuscle(it.exId); if (m) plan[m] += it.sets || 0; }); });
   const scale = Math.max(1, ...MUSCLES.map(([k]) => Math.max(done[k], plan[k])));
   const wlabel = ui.weekOff === 0 ? 'Esta semana' : ui.weekOff === -1 ? 'Semana pasada' : `${fmtDate(ws)} – ${fmtDate(we)}`;
-  let h = `<div class="card"><h2>Series por músculo</h2>
+  let h = vMonth() + `<div class="card"><h2>Series por músculo</h2>
     <div class="weeknav"><button class="icon nav edit" data-act="week" data-n="-1" aria-label="Semana anterior">‹</button>
       <div style="text-align:center"><b>${esc(wlabel)}</b><div class="muted small">${esc(fmtDate(ws))} – ${esc(fmtDate(we))}</div></div>
       <button class="icon nav edit" data-act="week" data-n="1" aria-label="Semana siguiente" ${ui.weekOff >= 0 ? 'disabled style="opacity:.3"' : ''}>›</button></div>`;
@@ -674,6 +736,7 @@ const A = {
     save(); render();
   },
   week: t => { ui.weekOff = Math.min(0, ui.weekOff + +t.dataset.n); render(); },
+  month: t => { ui.monthOff = Math.min(0, ui.monthOff + +t.dataset.n); render(); },
   metric: t => { ui.metric = t.dataset.m; render(); },
   moreHist: () => { ui.histN += 20; render(); },
   export: () => {
