@@ -1,5 +1,5 @@
 // Cachea la app para que funcione sin conexión. Sube la versión al cambiar archivos.
-const CACHE = 'gym-v3';
+const CACHE = 'gym-v4';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {

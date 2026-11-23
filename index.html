@@ -275,15 +275,28 @@ function toast(msg) {
 }
 
 // ---------- datos ----------
-function blank() { return { exercises: [], routines: [], week: [null, null, null, null, null, null, null], sessions: [], meta: {} }; }
+// Cada rutina (programa) tiene sus entrenos y su semana; ejercicios e historial son comunes a todas.
+const newProgram = (name, routines = [], week = [null, null, null, null, null, null, null]) => ({ id: uid(), name, routines, week });
+function blank() { const p = newProgram('Mi rutina'); return { exercises: [], programs: [p], activeProgram: p.id, sessions: [], meta: {} }; }
+function normalize(d) {
+  const s = Object.assign(blank(), d);
+  if (!Array.isArray(d.programs)) { // datos antiguos: una sola rutina
+    const p = newProgram('Mi rutina', d.routines || [], d.week || undefined);
+    s.programs = [p]; s.activeProgram = p.id;
+  }
+  delete s.routines; delete s.week;
+  if (!s.programs.some(p => p.id === s.activeProgram)) s.activeProgram = s.programs[0].id;
+  return s;
+}
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(KEY));
-    if (d && Array.isArray(d.exercises)) return Object.assign(blank(), d);
+    if (d && Array.isArray(d.exercises)) return normalize(d);
   } catch {}
   return blank();
 }
 let S = load();
+const P = () => S.programs.find(p => p.id === S.activeProgram);
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); }
   catch { toast('⚠️ No se pudo guardar'); }
@@ -297,7 +310,7 @@ const exName = id => exById(id)?.name ?? '(ejercicio borrado)';
 const exMuscle = id => exById(id)?.muscle;
 const sortEx = (a, b) => (MORDER[a.muscle] - MORDER[b.muscle]) || a.name.localeCompare(b.name, 'es');
 const sessionOn = date => S.sessions.find(s => s.date === date);
-const routineById = id => S.routines.find(r => r.id === id);
+const routineById = id => P().routines.find(r => r.id === id);
 
 function exOptions() {
   const act = S.exercises.filter(e => !e.archived);
@@ -353,14 +366,14 @@ function vHoy() {
   if (!isToday) h += `<div style="text-align:center;margin:-8px 0 12px"><button class="btn ghost small" data-act="goToday">Volver a hoy</button></div>`;
 
   if (!s) {
-    const planned = routineById(S.week[dow(d)]);
-    h += `<div class="card"><h2>¿Qué entrenas?</h2>`;
+    const planned = routineById(P().week[dow(d)]);
+    h += `<div class="card"><h2>¿Qué entrenas?</h2>${S.programs.length > 1 ? `<p class="muted small" style="margin:-6px 0 10px">Rutina: <b>${esc(P().name)}</b></p>` : ""}`;
     if (planned) h += pickBtn(planned, `Plan del ${DAYS[dow(d)].toLowerCase()}`, true);
-    else if (S.routines.length) h += `<p class="muted small" style="margin-top:0">Según tu plan, el ${DAYS[dow(d)].toLowerCase()} es día de descanso.</p>`;
-    S.routines.filter(r => r !== planned).forEach(r => h += pickBtn(r, '', false));
+    else if (P().routines.length) h += `<p class="muted small" style="margin-top:0">Según tu plan, el ${DAYS[dow(d)].toLowerCase()} es día de descanso.</p>`;
+    P().routines.filter(r => r !== planned).forEach(r => h += pickBtn(r, '', false));
     h += `<button class="pick" data-act="start" data-id=""><b>+ Entreno libre</b><span>Empieza vacío y añade ejercicios sobre la marcha</span></button>`;
     if (!S.exercises.length) h += `<p class="muted small">👉 Empieza creando tus ejercicios en la pestaña <b>Ejercicios</b> y luego tus entrenos en <b>Plan</b>.</p>`;
-    else if (!S.routines.length) h += `<p class="muted small">👉 Crea entrenos (Pecho, Pierna…) y asígnalos a cada día en la pestaña <b>Plan</b>.</p>`;
+    else if (!P().routines.length) h += `<p class="muted small">👉 Crea entrenos (Pecho, Pierna…) y asígnalos a cada día en la pestaña <b>Plan</b>.</p>`;
     return h + '</div>';
   }
 
@@ -422,16 +435,25 @@ function setRow(en, st, i, j, last, prev) {
 }
 
 function vPlan() {
-  let h = `<div class="card"><h2>Semana</h2><div class="list">` + DAYS.map((dn, i) => `
+  let h = `<div class="card"><h2>Rutina activa</h2>
+    <select data-field="prog" aria-label="Rutina activa">${S.programs.map(p => `<option value="${p.id}" ${p.id === S.activeProgram ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+    <label style="margin-top:10px">Nombre<input value="${esc(P().name)}" data-field="pname"></label>
+    <div class="row" style="margin-top:10px">
+      <button class="btn ghost small" data-act="newProgram">+ Nueva vacía</button>
+      <button class="btn ghost small" data-act="dupProgram">⧉ Duplicar</button>
+      ${S.programs.length > 1 ? `<button class="btn ghost small" data-act="delProgram" style="color:var(--danger)">🗑 Borrar</button>` : ''}
+    </div>
+    <p class="muted small" style="margin:10px 0 0">Cada rutina tiene sus entrenos y su semana. Los ejercicios y todo el historial (pesos, récords, progreso) son comunes a todas, así que puedes cambiar de rutina sin perder nada.</p></div>`;
+  h += `<div class="card"><h2>Semana</h2><div class="list">` + DAYS.map((dn, i) => `
     <div class="item"><div class="name"><b>${dn}</b></div>
       <div class="ctrl" style="flex:1;max-width:240px"><select data-field="week" data-d="${i}">
         <option value="">😴 Descanso</option>
-        ${S.routines.map(r => `<option value="${r.id}" ${S.week[i] === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}
+        ${P().routines.map(r => `<option value="${r.id}" ${P().week[i] === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}
       </select></div></div>`).join('') + `</div></div>`;
 
   h += `<div class="section-head"><h2>Entrenos</h2><button class="btn small" data-act="newRoutine">+ Nuevo entreno</button></div>`;
-  if (!S.routines.length) h += `<div class="card empty">Aún no hay entrenos. Crea uno (p. ej. “Torso”, “Pierna”, “Push”) y añádele ejercicios con sus series y repeticiones objetivo.</div>`;
-  S.routines.forEach(r => {
+  if (!P().routines.length) h += `<div class="card empty">Aún no hay entrenos. Crea uno (p. ej. “Torso”, “Pierna”, “Push”) y añádele ejercicios con sus series y repeticiones objetivo.</div>`;
+  P().routines.forEach(r => {
     const tot = r.items.reduce((a, it) => a + (it.sets || 0), 0);
     h += `<div class="card">
       <div class="ex-head"><div class="name"><input class="title" value="${esc(r.name)}" data-field="rname" data-id="${r.id}" aria-label="Nombre del entreno"></div>
@@ -489,7 +511,7 @@ function vMonth() {
   let cells = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<span class="dh">${d}</span>`).join('');
   cells += '<span></span>'.repeat(dow(ms));
   for (let i = 1; i <= nd; i++) {
-    const d = ymd(new Date(y, m, i)), n = sets[d] || 0, isPlan = !!routineById(S.week[dow(d)]);
+    const d = ymd(new Date(y, m, i)), n = sets[d] || 0, isPlan = !!routineById(P().week[dow(d)]);
     if (n) { trained++; totSets += n; }
     if (isPlan) planned++;
     const cls = [`l${lvl(n)}`, d === td ? 'today' : '', d > td ? 'future' : '', !n && isPlan && d >= td ? 'plan' : ''].join(' ');
@@ -523,7 +545,7 @@ function vProg() {
   MUSCLES.forEach(([k]) => { done[k] = 0; plan[k] = 0; });
   for (const s of S.sessions) if (s.date >= ws && s.date <= we)
     for (const e of s.entries) { const m = exMuscle(e.exId); if (m) done[m] += e.sets.filter(valid).length; }
-  S.week.forEach(rid => { const r = routineById(rid); if (r) r.items.forEach(it => { const m = exMuscle(it.exId); if (m) plan[m] += it.sets || 0; }); });
+  P().week.forEach(rid => { const r = routineById(rid); if (r) r.items.forEach(it => { const m = exMuscle(it.exId); if (m) plan[m] += it.sets || 0; }); });
   const scale = Math.max(1, ...MUSCLES.map(([k]) => Math.max(done[k], plan[k])));
   const wlabel = ui.weekOff === 0 ? 'Esta semana' : ui.weekOff === -1 ? 'Semana pasada' : `${fmtDate(ws)} – ${fmtDate(we)}`;
   let h = vMonth() + `<div class="card"><h2>Series por músculo</h2>
@@ -633,7 +655,7 @@ function vDatos() {
   </div>
   <div class="card"><h2>Resumen</h2><div class="stats">
     <div class="stat"><b>${S.exercises.filter(e => !e.archived).length}</b><span>ejercicios</span></div>
-    <div class="stat"><b>${S.routines.length}</b><span>entrenos</span></div>
+    <div class="stat"><b>${S.programs.length}</b><span>rutina${S.programs.length === 1 ? "" : "s"}</span></div>
     <div class="stat"><b>${S.sessions.length}</b><span>sesiones</span></div></div></div>`;
 }
 
@@ -696,8 +718,27 @@ const A = {
     if (st.r == null) { row.querySelector('[data-field=r]').focus(); return toast('Escribe las repeticiones'); }
     save(); render();
   },
+  newProgram: () => {
+    const p = newProgram(`Rutina ${S.programs.length + 1}`);
+    S.programs.push(p); S.activeProgram = p.id; save(); render();
+    const inp = document.querySelector('[data-field=pname]'); inp.focus(); inp.select();
+    toast('Nueva rutina activa');
+  },
+  dupProgram: () => {
+    const src = P(), ids = {};
+    const routines = src.routines.map(r => { ids[r.id] = uid(); return { ...r, id: ids[r.id], items: r.items.map(it => ({ ...it })) }; });
+    const p = newProgram(`${src.name} (copia)`, routines, src.week.map(w => w ? ids[w] ?? null : null));
+    S.programs.push(p); S.activeProgram = p.id; save(); render();
+    const inp = document.querySelector('[data-field=pname]'); inp.focus(); inp.select();
+    toast('Rutina duplicada');
+  },
+  delProgram: () => {
+    if (S.programs.length < 2) return;
+    if (!confirm(`¿Borrar la rutina “${P().name}” (sus entrenos y su semana)? El historial y los ejercicios se conservan.`)) return;
+    S.programs = S.programs.filter(p => p !== P()); S.activeProgram = S.programs[0].id; save(); render();
+  },
   newRoutine: () => {
-    S.routines.push({ id: uid(), name: `Entreno ${String.fromCharCode(65 + S.routines.length % 26)}`, items: [] });
+    P().routines.push({ id: uid(), name: `Entreno ${String.fromCharCode(65 + P().routines.length % 26)}`, items: [] });
     save(); render();
     const inputs = document.querySelectorAll('[data-field=rname]'); const last = inputs[inputs.length - 1];
     if (last) { last.focus(); last.select(); }
@@ -705,8 +746,8 @@ const A = {
   delRoutine: t => {
     const r = routineById(t.dataset.id);
     if (!confirm(`¿Borrar el entreno “${r.name}”? Tu historial no se borra.`)) return;
-    S.routines = S.routines.filter(x => x !== r);
-    S.week = S.week.map(w => w === r.id ? null : w); save(); render();
+    P().routines = P().routines.filter(x => x !== r);
+    P().week = P().week.map(w => w === r.id ? null : w); save(); render();
   },
   addItem: t => {
     const id = document.getElementById('add-' + t.dataset.id).value;
@@ -731,7 +772,7 @@ const A = {
     const e = exById(t.dataset.id);
     const used = S.sessions.some(s => s.entries.some(en => en.exId === e.id));
     if (!confirm(used ? `“${e.name}” tiene historial. Se ocultará de las listas pero su historial se conserva. ¿Continuar?` : `¿Borrar “${e.name}”?`)) return;
-    S.routines.forEach(r => r.items = r.items.filter(it => it.exId !== e.id));
+    S.programs.forEach(p => p.routines.forEach(r => r.items = r.items.filter(it => it.exId !== e.id)));
     if (used) e.archived = true; else S.exercises = S.exercises.filter(x => x !== e);
     save(); render();
   },
@@ -776,6 +817,7 @@ document.addEventListener('input', e => {
     document.getElementById('st-v').textContent = fmtK(ss.vol);
   } else if (f === 'sname') { cur().name = t.value; save(); }
   else if (f === 'rname') { routineById(t.dataset.id).name = t.value; save(); }
+  else if (f === 'pname') { P().name = t.value; save(); }
   else if (f === 'itSets') { const v = num(t.value); routineById(t.dataset.id).items[+t.dataset.k].sets = v == null ? null : Math.max(0, Math.round(v)); save(); }
   else if (f === 'itReps') { routineById(t.dataset.id).items[+t.dataset.k].reps = t.value.trim(); save(); }
   else if (f === 'exName') { const v = t.value.trim(); if (v) { exById(t.dataset.id).name = v; save(); } }
@@ -783,10 +825,11 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const t = e.target, f = t.dataset.field;
   if (f === 'date') { if (t.value) { ui.date = t.value; render(); } }
-  else if (f === 'week') { S.week[+t.dataset.d] = t.value || null; save(); }
+  else if (f === 'week') { P().week[+t.dataset.d] = t.value || null; save(); }
   else if (f === 'exMuscle') { exById(t.dataset.id).muscle = t.value; save(); render(); }
   else if (f === 'progEx') { ui.progEx = t.value; render(); }
-  else if (f === 'rname') render(); // refresca los selectores de la semana
+  else if (f === 'rname' || f === 'pname') { if (f === 'pname' && !t.value.trim()) P().name = 'Sin nombre'; save(); render(); } // refresca los selectores
+  else if (f === 'prog') { S.activeProgram = t.value; save(); render(); toast(`Rutina activa: ${P().name}`); }
   else if (f === 'exName' && !t.value.trim()) render();
   else if (f === 'import') {
     const file = t.files[0]; if (!file) return;
@@ -794,7 +837,7 @@ document.addEventListener('change', e => {
       const d = JSON.parse(txt);
       if (!d || !Array.isArray(d.exercises) || !Array.isArray(d.sessions)) throw new Error();
       if (!confirm(`El archivo tiene ${d.exercises.length} ejercicios y ${d.sessions.length} sesiones. Sustituirá todos los datos actuales. ¿Continuar?`)) return;
-      S = Object.assign(blank(), d); save(); render(); toast('Datos importados');
+      S = normalize(d); save(); render(); toast('Datos importados');
     }).catch(() => toast('⚠️ Archivo no válido'));
     t.value = '';
   }
