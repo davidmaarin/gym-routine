@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#ea580c"/><text x="256" y="340" font-size="280" text-anchor="middle">🏋️</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a59b8"/><stop offset=".5" stop-color="#0f2556"/><stop offset="1" stop-color="#04060b"/></linearGradient>
+    <linearGradient id="m" gradientUnits="userSpaceOnUse" x1="0" y1="160" x2="0" y2="350"><stop offset="0" stop-color="#fff"/><stop offset=".49" stop-color="#cfe0ff"/><stop offset=".51" stop-color="#7fa8f2"/><stop offset="1" stop-color="#d9e6ff"/></linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#b)"/>
+  <g fill="url(#m)"><rect x="104" y="214" width="30" height="84" rx="15"/><rect x="146" y="166" width="46" height="180" rx="20"/><rect x="192" y="238" width="128" height="36"/><rect x="320" y="166" width="46" height="180" rx="20"/><rect x="378" y="214" width="30" height="84" rx="15"/></g>
+  <path d="M0 96A96 96 0 0 1 96 0H416A96 96 0 0 1 512 96V150Q256 300 0 250Z" fill="url(#g)"/>
+</svg>
