@@ -91,7 +91,7 @@
   @media (min-width: 820px) {
     body { padding-bottom: 0; }
     nav { position: sticky; top: 54px; bottom: auto; border-top: 0; border-bottom: 1px solid rgba(134, 180, 255, .16); justify-content: center; box-shadow: none; }
-    nav button { flex: 0 0 150px; flex-direction: row; justify-content: center; gap: 7px; font-size: 15px; }
+    nav button { flex: 0 0 138px; flex-direction: row; justify-content: center; gap: 7px; font-size: 15px; }
     nav button span { font-size: 18px; }
     nav button.active::before { top: auto; bottom: -1px; }
     nav button.active::after { transform: scaleY(-1); }
@@ -129,6 +129,7 @@
   .card h2 .ic { color: var(--accent); margin-right: 4px; }
   .card h3 { margin: 20px 0 4px; font-size: 14px; font-weight: 650; color: var(--accent); }
   .card h3:first-of-type { margin-top: 2px; }
+  .card table + h3 { margin-top: 20px; }
   .section-head { display: flex; align-items: center; justify-content: space-between; margin: 22px 2px 12px; }
   .section-head h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
@@ -298,7 +299,8 @@
     color: var(--ok); border-color: #1f6b63;
     background: linear-gradient(180deg, rgba(160, 255, 232, .18) 0%, rgba(160, 255, 232, .05) 49%, transparent 50%), var(--ok-soft);
   }
-  .ex-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .ex-foot { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 8px; }
+  .ex-foot .grow, .ex-foot .icon { margin-left: auto; }
 
   /* Calendario mensual */
   .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 380px; margin: 0 auto; }
@@ -357,6 +359,67 @@
   tr:last-child td { border-bottom: 0; }
   .hist { cursor: pointer; }
 
+  /* Diario */
+  textarea {
+    display: block; width: 100%; resize: vertical; font: inherit; font-size: 16px; color: var(--text);
+    border: 1px solid var(--border); border-radius: 11px; padding: 10px 11px;
+    background: linear-gradient(180deg, #03050a, #071022);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, .75), 0 1px 0 rgba(150, 188, 255, .1);
+  }
+  textarea::placeholder { color: #7587ac; opacity: 1; }
+  textarea:focus { outline: none; border-color: #5f94f2; box-shadow: inset 0 2px 5px rgba(0, 0, 0, .75), 0 0 0 3px rgba(80, 135, 245, .32); }
+  .fold {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 0;
+    border: 0; background: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+  }
+  .fold span { min-width: 0; }
+  .fold b { display: block; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .fold small { display: block; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fold i { font-style: normal; color: var(--accent); font-size: 17px; }
+  .feels { margin-top: 12px; }
+  .feels p { margin: 4px 0 12px; }
+  .feel {
+    display: grid; grid-template-columns: minmax(94px, 1.6fr) repeat(5, minmax(0, 1fr)); gap: 6px;
+    align-items: center; margin-bottom: 7px; font-size: 14px;
+  }
+  .feel button, .types button {
+    font: inherit; font-weight: 600; cursor: pointer; color: #b7d1ff; border: 1px solid #1f3159; border-radius: 11px;
+    background: linear-gradient(180deg, #03050a, #0a152d); box-shadow: inset 0 1px 0 rgba(200, 222, 255, .08);
+  }
+  .feel button { min-height: 40px; padding: 0; }
+  .types { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .types button { font-size: 13px; padding: 8px 11px; }
+  .feel button.active, .types button.active {
+    color: #fff; border-color: #4f83e0; background: var(--gloss), linear-gradient(180deg, #2f62c4, #143072);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 3px 12px -4px rgba(38, 92, 214, .8);
+  }
+  .notes { display: flex; flex-direction: column; gap: 8px; }
+  .notes:not(:empty) { margin-top: 10px; }
+  .note {
+    display: block; width: 100%; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+    border: 1px solid #1a2b50; border-radius: 12px; padding: 9px 11px; background: rgba(3, 6, 14, .55);
+  }
+  .note-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; font-size: 13px; }
+  .note-top b { font-weight: 650; margin-right: 7px; }
+  .note-text { display: block; margin: 4px 0 0; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .note-form { margin-top: 8px; }
+  .feel-line { margin: 8px 0 0; font-size: 13px; color: #b7d1ff; }
+  .chip.t-molestia { color: #ffb3bc; border-color: #6d2f42; background: var(--gloss-soft), #35142a; }
+  .chip.t-nota { color: var(--muted); border-color: #24334f; background: #0b1426; }
+  .mk {
+    font-style: normal; font-size: 11px; font-weight: 700; line-height: 18px; min-width: 18px; text-align: center;
+    border-radius: 9px; background: #cfe0ff; color: #06122c; margin-right: 6px;
+  }
+  .eff { display: block; margin-top: 5px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .eff .down, .drop em { color: var(--danger); }
+  .eff .up { color: var(--ok); }
+  .drop em { font-style: normal; }
+  .why { font-size: 13px; margin-top: 4px; overflow-wrap: anywhere; }
+  .remind { font-size: 13px; margin: -2px 0 9px; padding-left: 10px; border-left: 2px solid #3a74e8; color: #cfe0ff; overflow-wrap: anywhere; }
+  svg.chart line.mark { stroke: #cfe0ff; stroke-width: 1; stroke-dasharray: 3 3; opacity: .6; }
+  svg.chart circle.mark { fill: #cfe0ff; }
+  svg.chart text.mark { fill: #06122c; font-size: 9px; font-weight: 700; }
+
   #toast {
     position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); transform: translateX(-50%);
     color: #fff; padding: 9px 16px; border: 1px solid #4f83e0; border-radius: 12px; font-size: 14px; font-weight: 600;
@@ -377,6 +440,7 @@
   <symbol id="i-log" viewBox="0 0 24 24"><path d="M19 12v6.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 18.5v-12A2.5 2.5 0 0 1 7.5 4H12M9 14.5l.6-3L17.2 3.900a1.700 1.700 0 0 1 2.400 2.400L12 13.900z"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 2.800v4M16 2.800v4M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></symbol>
   <symbol id="i-prog" viewBox="0 0 24 24"><path d="M3.5 3.5v14a3 3 0 0 0 3 3h14M7.5 15l4-4.500 3 2.500L20 6.500M15.800 6.500H20v4.200"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M6.5 3.500h11A1.500 1.500 0 0 1 19 5v14a1.500 1.500 0 0 1-1.500 1.500h-11A1.500 1.500 0 0 1 5 19V5a1.500 1.500 0 0 1 1.500-1.500M8.500 3.500v17M12 8h3.500M12 12h3.500"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10.500l4.500 4.500 4.500-4.500M4 16.500v1.800A2.700 2.700 0 0 0 6.700 21h10.600a2.700 2.700 0 0 0 2.700-2.700v-1.800"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.500h16M9 6.500V4.700A1.700 1.700 0 0 1 10.700 3h2.600A1.700 1.700 0 0 1 15 4.700v1.800M6 6.500l.9 12.200A2.500 2.500 0 0 0 9.400 21h5.200a2.500 2.500 0 0 0 2.500-2.300L18 6.500M10 11v5.500M14 11v5.500"/></symbol>
   <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12h.01"/></symbol>
@@ -391,6 +455,7 @@
   <button data-act="tab" data-tab="plan"><span><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg></span>Plan</button>
   <button data-act="tab" data-tab="ej"><span><svg class="ic" aria-hidden="true"><use href="#i-gym"/></svg></span>Ejercicios</button>
   <button data-act="tab" data-tab="prog"><span><svg class="ic" aria-hidden="true"><use href="#i-prog"/></svg></span>Progreso</button>
+  <button data-act="tab" data-tab="diario"><span><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg></span>Diario</button>
 </nav>
 <main></main>
 <div id="toast"></div>
@@ -434,7 +499,7 @@ function toast(msg) {
 // ---------- datos ----------
 // Cada rutina (programa) tiene sus entrenos y su semana; ejercicios e historial son comunes a todas.
 const newProgram = (name, routines = [], week = [null, null, null, null, null, null, null]) => ({ id: uid(), name, routines, week });
-function blank() { const p = newProgram('Mi rutina'); return { exercises: [], programs: [p], activeProgram: p.id, sessions: [], meta: {} }; }
+function blank() { const p = newProgram('Mi rutina'); return { exercises: [], programs: [p], activeProgram: p.id, sessions: [], diary: [], checkins: {}, meta: {} }; }
 function normalize(d) {
   const s = Object.assign(blank(), d);
   if (!Array.isArray(d.programs)) { // datos antiguos: una sola rutina
@@ -442,6 +507,8 @@ function normalize(d) {
     s.programs = [p]; s.activeProgram = p.id;
   }
   delete s.routines; delete s.week;
+  s.diary = (Array.isArray(d.diary) ? d.diary : []).filter(n => n && n.date && String(n.text ?? '').trim()).map(n => ({ ...n, exId: n.exId || null, text: String(n.text) }));
+  if (!s.checkins || typeof s.checkins !== 'object') s.checkins = {};
   if (!s.programs.some(p => p.id === s.activeProgram)) s.activeProgram = s.programs[0].id;
   return s;
 }
@@ -460,7 +527,7 @@ function save() {
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
-const ui = { tab: 'hoy', date: today(), weekOff: 0, monthOff: 0, progEx: null, metric: 'e1rm', histN: 15 };
+const ui = { tab: 'hoy', date: today(), weekOff: 0, monthOff: 0, progEx: null, metric: 'e1rm', histN: 15, diaryOpen: false, editNote: null, diaryF: 'todo', diaryEx: '', diaryN: 20 };
 
 const exById = id => S.exercises.find(e => e.id === id);
 const exName = id => exById(id)?.name ?? '(ejercicio borrado)';
@@ -504,8 +571,141 @@ function sessStats(s) {
   return { n, vol };
 }
 
+// ---------- diario ----------
+const NTYPES = {
+  tecnica: 'Técnica o recorrido', material: 'Máquina, apoyo o agarre', orden: 'Orden, descanso o esfuerzo',
+  molestia: 'Molestia', habitos: 'Dieta o hábitos', nota: 'Nota',
+};
+const FEEL = { sueno: 'Sueño', recup: 'Recuperación', sens: 'Sensaciones' };
+const DROP = 0.05; // caída del 1RM estimado a partir de la cual se pide explicación
+const noteById = id => S.diary.find(n => n.id === id);
+const written = n => n.text.trim() !== '';
+const isChange = n => n.type !== 'nota';
+const pruneNotes = () => { S.diary = S.diary.filter(written); };
+const stopNote = () => { ui.editNote = null; pruneNotes(); };
+const notesFor = (date, exId) => S.diary.filter(n => n.date === date && n.exId === exId && (written(n) || n.id === ui.editNote));
+const feelText = c => c ? Object.entries(FEEL).filter(([k]) => c[k]).map(([k, l]) => `${l} ${c[k]}/5`).join(' · ') : '';
+// Último cambio o molestia del ejercicio anterior a `date`, para tenerlo presente al entrenar
+const lastChange = (exId, date) => S.diary.filter(n => n.exId === exId && n.date < date && isChange(n) && written(n)).sort((a, b) => b.date.localeCompare(a.date))[0];
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const fmtPct = x => `${x > 0 ? '+' : x < 0 ? '−' : ''}${fmtN(Math.abs(x) * 100)} %`;
+const noteTag = n => `<span class="chip t-${n.type in NTYPES ? n.type : 'nota'}">${NTYPES[n.type] || NTYPES.nota}</span>`;
+function setCheckin(date, c) {
+  if (feelText(c) || (c.text || '').trim()) S.checkins[date] = c; else delete S.checkins[date];
+  save();
+}
+
+function noteItem(n, opts = {}) {
+  return `<button class="note" data-act="editNote" data-id="${n.id}">
+    <span class="note-top">${opts.num ? `<i class="mk">${opts.num}</i>` : ''}${noteTag(n)}${opts.ex ? `<b>${esc(n.exId ? exName(n.exId) : 'General')}</b>` : ''}${opts.date ? `<span class="muted">${esc(fmtDate(n.date))}</span>` : ''}</span>
+    <span class="note-text">${esc(n.text)}</span>${opts.extra || ''}</button>`;
+}
+// full: permite cambiar también la fecha y el ejercicio
+function noteForm(n, full) {
+  const types = Object.entries(NTYPES).filter(([k]) => k === n.type || !(n.exId && k === 'habitos'));
+  const exs = S.exercises.filter(e => !e.archived || e.id === n.exId);
+  return `<div class="note-form">
+    ${full ? `<div class="row"><label>Fecha<input type="date" value="${n.date}" data-field="ndate" data-id="${n.id}"></label>
+      <label class="wide">Ejercicio<select data-field="nex" data-id="${n.id}"><option value="">General (afecta a todo)</option>${MUSCLES.map(([k, l]) => {
+        const list = exs.filter(e => e.muscle === k).sort(sortEx);
+        return list.length ? `<optgroup label="${l}">${list.map(e => `<option value="${e.id}" ${e.id === n.exId ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</optgroup>` : '';
+      }).join('')}</select></label></div>` : ''}
+    <div class="types" role="group" aria-label="Tipo de anotación">${types.map(([k, l]) => `<button class="${n.type === k ? 'active' : ''}" aria-pressed="${n.type === k}" data-act="noteType" data-id="${n.id}" data-t="${k}">${l}</button>`).join('')}</div>
+    <textarea rows="3" data-field="ntext" data-id="${n.id}" aria-label="Anotación" placeholder="${n.exId ? 'p. ej. Bajo más lento y sin rebote, pecho apoyado' : 'p. ej. Empiezo déficit, cambio el orden de los ejercicios'}">${esc(n.text)}</textarea>
+    <div class="ex-foot"><button class="btn small" data-act="closeNote">Listo</button>
+      <button class="icon" data-act="delNote" data-id="${n.id}" aria-label="Borrar anotación"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button></div></div>`;
+}
+const noteOrForm = n => n.id === ui.editNote ? noteForm(n) : noteItem(n);
+
+function daySummary(d) {
+  const c = S.checkins[d] || {}, k = notesFor(d, null).filter(written).length;
+  return [feelText(c), k ? `${k} ${k === 1 ? 'anotación' : 'anotaciones'}` : ''].filter(Boolean).join(' · ') || c.text || 'Sueño, recuperación y sensaciones';
+}
+function dayCard(d) {
+  const c = S.checkins[d] || {};
+  return `<div class="card">
+    <button class="fold" data-act="toggleDiary" aria-expanded="${ui.diaryOpen}"><span><b>Diario del día</b><small>${esc(daySummary(d))}</small></span><i aria-hidden="true">${ui.diaryOpen ? '▴' : '▾'}</i></button>
+    ${ui.diaryOpen ? `<div class="feels">${Object.entries(FEEL).map(([k, l]) => `<div class="feel" role="group" aria-label="${l}"><span>${l}</span>${[1, 2, 3, 4, 5].map(v => `<button class="${c[k] === v ? 'active' : ''}" aria-pressed="${c[k] === v}" data-act="feel" data-k="${k}" data-v="${v}">${v}</button>`).join('')}</div>`).join('')}
+      <p class="muted small">1 es muy mal y 5 muy bien. Pulsa otra vez para quitarlo.</p></div>
+    <textarea rows="3" data-field="ctext" aria-label="Notas del día" placeholder="Cómo te has encontrado: energía, agujetas, estrés, comida…">${esc(c.text || '')}</textarea>
+    <div class="notes">${notesFor(d, null).map(noteOrForm).join('')}</div>
+    <div class="ex-foot"><button class="btn ghost small" data-act="addNote" data-ex="">+ Cambio general</button></div>` : ''}</div>`;
+}
+
+function vDiario() {
+  const ed = noteById(ui.editNote);
+  let h = ed ? `<div class="card"><h2>Anotación</h2>${noteForm(ed, true)}</div>`
+    : `<button class="btn block" style="margin-bottom:14px" data-act="addNote" data-ex="" data-type="tecnica">+ Nueva anotación</button>`;
+  const all = S.diary.filter(n => written(n) && n.id !== ui.editNote);
+  const exIds = [...new Set(all.map(n => n.exId))].map(exById).filter(Boolean).sort(sortEx);
+  if (!exIds.some(e => e.id === ui.diaryEx)) ui.diaryEx = '';
+
+  const week = Object.entries(S.checkins).filter(([d]) => d > addDays(today(), -7) && d <= today()).map(([, c]) => c);
+  if (week.some(feelText)) h += `<div class="card"><h2>Últimos 7 días</h2><div class="stats">${Object.entries(FEEL).map(([k, l]) => {
+    const v = week.map(c => c[k]).filter(Boolean);
+    return `<div class="stat"><b>${v.length ? fmtN(mean(v)) : '–'}</b><span>${l}</span></div>`;
+  }).join('')}</div></div>`;
+
+  h += `<div class="seg">${[['todo', 'Todo'], ['cambios', 'Cambios'], ['dias', 'Sensaciones']].map(([k, l]) => `<button class="${ui.diaryF === k ? 'active' : ''}" data-act="diaryF" data-f="${k}">${l}</button>`).join('')}</div>`;
+  if (exIds.length && ui.diaryF !== 'dias') h += `<select data-field="diaryEx" aria-label="Filtrar por ejercicio" style="margin-bottom:14px"><option value="">Todos los ejercicios</option>${exIds.map(e => `<option value="${e.id}" ${e.id === ui.diaryEx ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</select>`;
+
+  const exF = ui.diaryF === 'dias' ? '' : ui.diaryEx;
+  const list = ui.diaryF === 'dias' ? [] : all.filter(n => (ui.diaryF === 'todo' || isChange(n)) && (!exF || n.exId === exF));
+  const showDay = ui.diaryF !== 'cambios' && !exF;
+  const days = [...new Set([...list.map(n => n.date), ...(showDay ? Object.keys(S.checkins) : [])])].sort().reverse();
+  if (!days.length) return h + `<div class="card empty">${all.length || Object.keys(S.checkins).length ? 'No hay nada con este filtro.' : 'Anota aquí los cambios que puedan mover tus marcas (técnica, apoyo, orden, dieta…). Luego los verás señalados en la gráfica de cada ejercicio. Las sensaciones del día se apuntan en Entreno.'}</div>`;
+  h += days.slice(0, ui.diaryN).map(d => {
+    const c = showDay ? S.checkins[d] : null, s = sessionOn(d);
+    return `<div class="card"><button class="fold" data-act="openDay" data-date="${d}"><span><b>${esc(cap(fmtDate(d, { weekday: 'long', day: 'numeric', month: 'long' })))}</b><small>${esc(s ? s.name : 'Sin entreno')}</small></span><i aria-hidden="true">›</i></button>
+      ${feelText(c) ? `<p class="feel-line">${esc(feelText(c))}</p>` : ''}${c && c.text ? `<p class="note-text">${esc(c.text)}</p>` : ''}
+      <div class="notes">${list.filter(n => n.date === d).map(n => noteItem(n, { ex: true })).join('')}</div></div>`;
+  }).join('');
+  if (days.length > ui.diaryN) h += `<button class="btn ghost block" data-act="moreDiary">Ver más</button>`;
+  return h;
+}
+
+// Cambios que pueden afectar a un ejercicio: los suyos y los generales
+const changesFor = exId => S.diary.filter(n => written(n) && isChange(n) && (n.exId === exId || !n.exId)).sort((a, b) => a.date.localeCompare(b.date));
+// Fechas con cambios dentro del tramo de la gráfica, numeradas
+function changeMarks(pts, exId) {
+  const ds = [...new Set(changesFor(exId).map(n => n.date))].filter(d => d >= pts[0].date && d <= pts[pts.length - 1].date);
+  return ds.slice(-9).map((date, i) => ({ date, num: i + 1 }));
+}
+// Caídas del 1RM estimado frente a la media de hasta 3 sesiones previas, con lo anotado en ese periodo
+function findDrops(pts, exId) {
+  const out = [];
+  pts.forEach((p, i) => {
+    const ref = pts.slice(Math.max(0, i - 3), i);
+    if (!ref.length) return;
+    const m = mean(ref.map(r => r.e1rm));
+    if (!m || (p.e1rm - m) / m > -DROP) return;
+    const notes = S.diary.filter(n => written(n) && n.date > ref[0].date && n.date <= p.date && (n.exId === exId || (!n.exId && isChange(n))));
+    const c = S.checkins[p.date] || {};
+    const low = Object.entries(FEEL).filter(([k]) => c[k] && c[k] <= 2).map(([k, l]) => `${l} ${c[k]}/5`).join(' · ');
+    out.push({ p, m, pct: (p.e1rm - m) / m, notes, low, text: c.text || '' });
+  });
+  return out;
+}
+function vChanges(pts, exId, marks, label, unit) {
+  let h = '';
+  const drops = findDrops(pts, exId).slice(-4).reverse();
+  if (drops.length) h += `<h3>Caídas recientes</h3><div class="list">` + drops.map(x => {
+    const why = x.notes.map(n => `<div class="why">${noteTag(n)}${esc(n.text)}</div>`).join('') + [x.low, x.text].filter(Boolean).map(t => `<div class="why">${esc(t)}</div>`).join('');
+    return `<div class="item drop"><div class="name"><b>${esc(fmtDate(x.p.date))} <em>${fmtPct(x.pct)}</em></b><span class="muted small">1RM est. ${fmtN(x.m)} → ${fmtN(x.p.e1rm)} kg</span>${why}</div>
+      <button class="btn ghost small" data-act="explain" data-date="${x.p.date}" data-ex="${exId}">${why ? 'Añadir' : 'Anotar motivo'}</button></div>`;
+  }).join('') + `</div><p class="muted small" style="margin:4px 0 0">Sesiones un ${fmtN(DROP * 100)} % o más por debajo de la media de las 3 anteriores.</p>`;
+  const ch = changesFor(exId).reverse().slice(0, 8);
+  if (ch.length) h += `<h3>Cambios anotados</h3><div class="notes">` + ch.map(n => {
+    const a = pts.filter(p => p.date < n.date).slice(-3).map(p => p[ui.metric]), b = pts.filter(p => p.date >= n.date).slice(0, 3).map(p => p[ui.metric]);
+    const ma = a.length ? mean(a) : 0, mb = b.length ? mean(b) : 0;
+    const extra = ma && b.length ? `<span class="eff">${label}: ${fmtN(ma)} → ${fmtN(mb)}${unit ? ' ' + unit : ''} <b class="${mb < ma ? 'down' : 'up'}">${fmtPct((mb - ma) / ma)}</b></span>` : '';
+    return noteItem(n, { num: marks.find(m => m.date === n.date)?.num, date: true, ex: !n.exId, extra });
+  }).join('') + `</div><p class="muted small" style="margin:8px 0 0">Compara la media de hasta 3 sesiones antes y 3 desde el cambio. Que coincidan no demuestra que sea la causa.</p>`;
+  return h;
+}
+
 // ---------- vistas ----------
-const VIEWS = { hoy: vHoy, plan: vPlan, ej: vEj, prog: vProg, datos: vDatos };
+const VIEWS = { hoy: vHoy, plan: vPlan, ej: vEj, prog: vProg, diario: vDiario, datos: vDatos };
 function render() {
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === ui.tab));
   document.querySelector('main').innerHTML = VIEWS[ui.tab]();
@@ -531,7 +731,7 @@ function vHoy() {
     h += `<button class="pick" data-act="start" data-id=""><b>+ Entreno libre</b><span>Empieza vacío y añade ejercicios sobre la marcha</span></button>`;
     if (!S.exercises.length) h += `<p class="muted small">Empieza creando tus ejercicios en la pestaña <b>Ejercicios</b> y luego tus entrenos en <b>Plan</b>.</p>`;
     else if (!P().routines.length) h += `<p class="muted small">Crea entrenos (Pecho, Pierna…) y asígnalos a cada día en la pestaña <b>Plan</b>.</p>`;
-    return h + '</div>';
+    return h + '</div>' + dayCard(d);
   }
 
   const st = sessStats(s);
@@ -542,10 +742,11 @@ function vHoy() {
       <div class="stat"><b id="st-n">${st.n}</b><span>series</span></div>
       <div class="stat"><b id="st-v">${fmtK(st.vol)}</b><span>kg volumen</span></div>
       <div class="stat"><b>${s.entries.length}</b><span>ejercicios</span></div>
-    </div></div>`;
+    </div></div>` + dayCard(d);
 
   s.entries.forEach((en, i) => {
     const last = lastPerf(en.exId, d), prev = bestBefore(en.exId, d), m = exMuscle(en.exId);
+    const ch = lastChange(en.exId, d), first = s.entries.findIndex(x => x.exId === en.exId) === i;
     h += `<div class="card">
       <div class="ex-head">
         <div class="name"><b>${esc(exName(en.exId))}</b>${m ? `<span class="chip">${MNAME[m]}</span>` : ''}${en.target ? `<span class="tgt"><svg class="ic" aria-hidden="true"><use href="#i-target"/></svg> ${esc(en.target)}</span>` : ''}</div>
@@ -556,9 +757,12 @@ function vHoy() {
       <div class="last">${last
         ? `Última vez (${esc(fmtDate(last.date))}): <b>${last.sets.map(x => `${fmtN(x.w || 0)}×${x.r}`).join(' · ')}</b>`
         : 'Primera vez con este ejercicio'}</div>
+      ${ch ? `<div class="remind">${esc(fmtDate(ch.date))}: ${esc(ch.text)}</div>` : ''}
       ${en.sets.map((x, j) => setRow(en, x, i, j, last, prev)).join('')}
       <div class="ex-foot"><button class="btn ghost small" data-act="addSet" data-i="${i}">+ Serie</button>
-        ${prev ? `<span class="muted small">Mejor 1RM est.: ${fmtN(prev)} kg</span>` : ''}</div>
+        ${first ? `<button class="btn ghost small" data-act="addNote" data-ex="${en.exId}">+ Nota</button>` : ''}
+        ${prev ? `<span class="muted small grow">Mejor 1RM est.: ${fmtN(prev)} kg</span>` : ''}</div>
+      ${first ? `<div class="notes">${notesFor(d, en.exId).map(noteOrForm).join('')}</div>` : ''}
     </div>`;
   });
 
@@ -754,9 +958,11 @@ function vProg() {
       <div class="kpi"><b>${topR.rmax}</b><span>Reps máx · ${esc(fmtDate(topR.date))}</span></div></div>`;
     const M = { e1rm: ['1RM est.', 'kg'], wmax: ['Peso máx', 'kg'], rmax: ['Reps máx', ''], vol: ['Volumen', 'kg'] };
     h += `<div class="seg">${Object.entries(M).map(([k, [l]]) => `<button class="${ui.metric === k ? 'active' : ''}" data-act="metric" data-m="${k}">${l}</button>`).join('')}</div>`;
-    h += chart(pts, ui.metric);
+    const marks = changeMarks(pts, ui.progEx);
+    h += chart(pts, ui.metric, marks);
     h += `<table><tr><th>Fecha</th><th>Mejor serie</th><th>Series</th><th>1RM est.</th><th>Volumen</th></tr>
       ${pts.slice(-8).reverse().map(p => `<tr><td>${esc(fmtDate(p.date))}</td><td><b>${fmtN(p.best.w || 0)}×${p.best.r}</b></td><td>${p.n}</td><td>${fmtN(p.e1rm)}</td><td>${fmtK(p.vol)}</td></tr>`).join('')}</table>`;
+    h += vChanges(pts, ui.progEx, marks, ...M[ui.metric]);
   }
   h += `</div>`;
 
@@ -776,8 +982,8 @@ function vProg() {
   return h + `</div>`;
 }
 
-function chart(pts, key) {
-  const W = 340, H = 170, pl = 38, pr = 12, pt = 12, pb = 24;
+function chart(pts, key, marks = []) {
+  const W = 340, pl = 38, pr = 12, pt = marks.length ? 40 : 12, pb = 24, H = 158 + pt;
   const xs = pts.map(p => parseYmd(p.date).getTime()), ys = pts.map(p => p[key]);
   let x0 = Math.min(...xs), x1 = Math.max(...xs);
   if (x0 === x1) { x0 -= 3 * 864e5; x1 += 3 * 864e5; }
@@ -791,6 +997,14 @@ function chart(pts, key) {
     const v = y0 + (y1 - y0) * i / 3, y = Y(v);
     g += `<line x1="${pl}" x2="${W - pr}" y1="${y}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
       <text x="${pl - 6}" y="${y + 3}" text-anchor="end">${fmtK(v)}</text>`;
+  }
+  // Cambios del diario: línea vertical numerada, en dos alturas si quedan muy juntos
+  let px = -99, up = false;
+  for (const mk of marks) {
+    const x = X(parseYmd(mk.date).getTime());
+    up = x - px < 18 && !up; px = x;
+    const y = up ? 9 : 26;
+    g += `<line class="mark" x1="${x}" x2="${x}" y1="${y}" y2="${H - pb}"/><circle class="mark" cx="${x}" cy="${y}" r="7.5"/><text class="mark" x="${x}" y="${y + 3.2}" text-anchor="middle">${mk.num}</text>`;
   }
   const d = pts.map((p, i) => `${i ? 'L' : 'M'}${X(xs[i]).toFixed(1)},${Y(p[key]).toFixed(1)}`).join(' ');
   const dots = pts.map((p, i) => `<circle cx="${X(xs[i]).toFixed(1)}" cy="${Y(p[key]).toFixed(1)}" r="3.5" fill="var(--card)" stroke="var(--accent)" stroke-width="2"><title>${esc(fmtDate(p.date))}: ${fmtN(p[key])}</title></circle>`).join('');
@@ -824,11 +1038,14 @@ function backupFile() {
 }
 function markBackup() { S.meta.lastBackup = today(); save(); render(); toast('Copia exportada'); }
 
+function focusNote() { const i = document.querySelector('[data-field=ntext]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
+function startNote(n) { stopNote(); n = { id: uid(), text: '', ...n }; S.diary.push(n); ui.editNote = n.id; render(); focusNote(); }
+
 const A = {
-  tab: t => { ui.tab = t.dataset.tab; if (ui.tab === 'hoy') ui.date = ui.date || today(); render(); scrollTo(0, 0); },
-  day: t => { ui.date = addDays(ui.date, +t.dataset.n); render(); },
-  goToday: () => { ui.date = today(); render(); },
-  openDay: t => { ui.date = t.dataset.date; ui.tab = 'hoy'; render(); scrollTo(0, 0); },
+  tab: t => { stopNote(); ui.tab = t.dataset.tab; if (ui.tab === 'hoy') ui.date = ui.date || today(); render(); scrollTo(0, 0); },
+  day: t => { stopNote(); ui.date = addDays(ui.date, +t.dataset.n); render(); },
+  goToday: () => { stopNote(); ui.date = today(); render(); },
+  openDay: t => { stopNote(); ui.date = t.dataset.date; ui.tab = 'hoy'; render(); scrollTo(0, 0); },
   start: t => {
     const r = routineById(t.dataset.id);
     S.sessions.push({
@@ -927,12 +1144,39 @@ const A = {
   },
   delEx: t => {
     const e = exById(t.dataset.id);
-    const used = S.sessions.some(s => s.entries.some(en => en.exId === e.id));
+    const used = S.sessions.some(s => s.entries.some(en => en.exId === e.id)) || S.diary.some(n => n.exId === e.id);
     if (!confirm(used ? `“${e.name}” tiene historial. Se ocultará de las listas pero su historial se conserva. ¿Continuar?` : `¿Borrar “${e.name}”?`)) return;
     S.programs.forEach(p => p.routines.forEach(r => r.items = r.items.filter(it => it.exId !== e.id)));
     if (used) e.archived = true; else S.exercises = S.exercises.filter(x => x !== e);
     save(); render();
   },
+  // Diario: las anotaciones se guardan al escribir; las que quedan vacías se descartan al cerrar
+  addNote: t => {
+    const exId = t.dataset.ex || null;
+    startNote({ date: ui.tab === 'diario' ? today() : ui.date, exId, type: t.dataset.type || (exId ? 'tecnica' : 'habitos') });
+  },
+  explain: t => { ui.tab = 'diario'; startNote({ date: t.dataset.date, exId: t.dataset.ex, type: 'tecnica' }); scrollTo(0, 0); },
+  editNote: t => {
+    stopNote(); ui.editNote = t.dataset.id;
+    if (ui.tab === 'prog') ui.tab = 'diario';
+    render(); if (ui.tab === 'diario') scrollTo(0, 0);
+    focusNote();
+  },
+  noteType: t => { noteById(t.dataset.id).type = t.dataset.t; save(); render(); },
+  closeNote: () => { stopNote(); save(); render(); },
+  delNote: t => {
+    const n = noteById(t.dataset.id);
+    if (written(n) && !confirm('¿Borrar esta anotación?')) return;
+    S.diary = S.diary.filter(x => x !== n); stopNote(); save(); render();
+  },
+  toggleDiary: () => { ui.diaryOpen = !ui.diaryOpen; render(); },
+  feel: t => {
+    const c = S.checkins[ui.date] || {}, k = t.dataset.k, v = +t.dataset.v;
+    if (c[k] === v) delete c[k]; else c[k] = v;
+    setCheckin(ui.date, c); render();
+  },
+  diaryF: t => { ui.diaryF = t.dataset.f; ui.diaryN = 20; render(); },
+  moreDiary: () => { ui.diaryN += 20; render(); },
   week: t => { ui.weekOff = Math.min(0, ui.weekOff + +t.dataset.n); render(); },
   month: t => { ui.monthOff = Math.min(0, ui.monthOff + +t.dataset.n); render(); },
   metric: t => { ui.metric = t.dataset.m; render(); },
@@ -977,13 +1221,18 @@ document.addEventListener('input', e => {
   else if (f === 'pname') { P().name = t.value; save(); }
   else if (f === 'itSets') { const v = num(t.value); routineById(t.dataset.id).items[+t.dataset.k].sets = v == null ? null : Math.max(0, Math.round(v)); save(); }
   else if (f === 'itReps') { routineById(t.dataset.id).items[+t.dataset.k].reps = t.value.trim(); save(); }
+  else if (f === 'ntext') { noteById(t.dataset.id).text = t.value; save(); }
+  else if (f === 'ctext') { setCheckin(ui.date, { ...S.checkins[ui.date], text: t.value }); document.querySelector('.fold small').textContent = daySummary(ui.date); }
   else if (f === 'exName') { const v = t.value.trim(); if (v) { exById(t.dataset.id).name = v; save(); } }
 });
 document.addEventListener('change', e => {
   const t = e.target, f = t.dataset.field;
-  if (f === 'date') { if (t.value) { ui.date = t.value; render(); } }
+  if (f === 'date') { if (t.value) { stopNote(); ui.date = t.value; render(); } }
   else if (f === 'week') { P().week[+t.dataset.d] = t.value || null; save(); }
   else if (f === 'exMuscle') { exById(t.dataset.id).muscle = t.value; save(); render(); }
+  else if (f === 'ndate') { if (t.value) { noteById(t.dataset.id).date = t.value; save(); } }
+  else if (f === 'nex') { const n = noteById(t.dataset.id); n.exId = t.value || null; if (n.exId && n.type === 'habitos') n.type = 'tecnica'; save(); render(); }
+  else if (f === 'diaryEx') { ui.diaryEx = t.value; render(); }
   else if (f === 'progEx') { ui.progEx = t.value; render(); }
   else if (f === 'rname' || f === 'pname') { if (f === 'pname' && !t.value.trim()) P().name = 'Sin nombre'; save(); render(); } // refresca los selectores
   else if (f === 'prog') { S.activeProgram = t.value; save(); render(); toast(`Rutina activa: ${P().name}`); }
@@ -993,8 +1242,9 @@ document.addEventListener('change', e => {
     file.text().then(txt => {
       const d = JSON.parse(txt);
       if (!d || !Array.isArray(d.exercises) || !Array.isArray(d.sessions)) throw new Error();
-      if (!confirm(`El archivo tiene ${d.exercises.length} ejercicios y ${d.sessions.length} sesiones. Sustituirá todos los datos actuales. ¿Continuar?`)) return;
-      S = normalize(d); save(); render(); toast('Datos importados');
+      if (!confirm(`El archivo tiene ${d.exercises.length} ejercicios y ${d.sessions.length} sesiones. ${Array.isArray(d.diary) ? 'Sustituirá todos los datos actuales.' : 'Sustituirá los datos actuales, salvo el diario, que no viene en el archivo.'} ¿Continuar?`)) return;
+      if (!Array.isArray(d.diary)) { d.diary = S.diary; d.checkins = S.checkins; }
+      S = normalize(d); ui.editNote = null; save(); render(); toast('Datos importados');
     }).catch(() => toast('⚠️ Archivo no válido'));
     t.value = '';
   }
