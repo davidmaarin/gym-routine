@@ -129,7 +129,7 @@
   .card h2 .ic { color: var(--accent); margin-right: 4px; }
   .card h3 { margin: 20px 0 4px; font-size: 14px; font-weight: 650; color: var(--accent); }
   .card h3:first-of-type { margin-top: 2px; }
-  .card table + h3 { margin-top: 20px; }
+  .card table + h3:first-of-type { margin-top: 20px; }
   .section-head { display: flex; align-items: center; justify-content: space-between; margin: 22px 2px 12px; }
   .section-head h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
@@ -416,7 +416,19 @@
   .drop em { font-style: normal; }
   .why { font-size: 13px; margin-top: 4px; overflow-wrap: anywhere; }
   .remind { font-size: 13px; margin: -2px 0 9px; padding-left: 10px; border-left: 2px solid #3a74e8; color: #cfe0ff; overflow-wrap: anywhere; }
+  .base { font-size: 11px; font-weight: 600; color: var(--ok); margin-left: 7px; }
+  .switch {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin: 0 0 10px; padding: 9px 11px;
+    font: inherit; color: var(--text); text-align: left; cursor: pointer; border: 1px solid #1f3159; border-radius: 12px; background: rgba(3, 6, 14, .55);
+  }
+  .switch b { display: block; font-size: 14px; font-weight: 600; }
+  .switch small { display: block; font-size: 12px; color: var(--muted); }
+  .switch i { flex: none; position: relative; width: 44px; height: 26px; border-radius: 13px; border: 1px solid #2a4274; background: var(--well); box-shadow: inset 0 2px 4px #000; }
+  .switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, #dbe8ff, #7f96c4); transition: transform .15s; }
+  .switch[aria-checked="true"] i { border-color: #4f83e0; background: var(--gloss), linear-gradient(180deg, #2f62c4, #143072); box-shadow: none; }
+  .switch[aria-checked="true"] i::after { transform: translateX(18px); background: linear-gradient(180deg, #fff, #cfe0ff); }
   svg.chart line.mark { stroke: #cfe0ff; stroke-width: 1; stroke-dasharray: 3 3; opacity: .6; }
+  svg.chart line.mark.base { stroke: var(--ok); stroke-dasharray: none; opacity: .8; }
   svg.chart circle.mark { fill: #cfe0ff; }
   svg.chart text.mark { fill: #06122c; font-size: 9px; font-weight: 700; }
 
@@ -507,7 +519,7 @@ function normalize(d) {
     s.programs = [p]; s.activeProgram = p.id;
   }
   delete s.routines; delete s.week;
-  s.diary = (Array.isArray(d.diary) ? d.diary : []).filter(n => n && n.date && String(n.text ?? '').trim()).map(n => ({ ...n, exId: n.exId || null, text: String(n.text) }));
+  s.diary = (Array.isArray(d.diary) ? d.diary : []).filter(n => n && n.date && String(n.text ?? '').trim()).map(n => ({ ...n, exId: n.exId || null, text: String(n.text), reset: !!n.exId && (n.reset ?? n.type === 'tecnica') }));
   if (!s.checkins || typeof s.checkins !== 'object') s.checkins = {};
   if (!s.programs.some(p => p.id === s.activeProgram)) s.activeProgram = s.programs[0].id;
   return s;
@@ -527,7 +539,7 @@ function save() {
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
-const ui = { tab: 'hoy', date: today(), weekOff: 0, monthOff: 0, progEx: null, metric: 'e1rm', histN: 15, diaryOpen: false, editNote: null, diaryF: 'todo', diaryEx: '', diaryN: 20 };
+const ui = { tab: 'hoy', date: today(), weekOff: 0, monthOff: 0, progEx: null, metric: 'e1rm', histN: 15, fromBase: true, diaryOpen: false, editNote: null, diaryF: 'todo', diaryEx: '', diaryN: 20 };
 
 const exById = id => S.exercises.find(e => e.id === id);
 const exName = id => exById(id)?.name ?? '(ejercicio borrado)';
@@ -560,7 +572,8 @@ function lastPerf(exId, date) {
 }
 function bestBefore(exId, date) {
   let b = 0;
-  for (const s of S.sessions) if (s.date < date)
+  const from = baseDate(exId, date);
+  for (const s of S.sessions) if (s.date < date && s.date >= from)
     for (const e of s.entries) if (e.exId === exId) for (const st of e.sets) if (valid(st)) b = Math.max(b, e1rm(st.w, st.r));
   return b;
 }
@@ -573,7 +586,7 @@ function sessStats(s) {
 
 // ---------- diario ----------
 const NTYPES = {
-  tecnica: 'Técnica o recorrido', material: 'Máquina, apoyo o agarre', orden: 'Orden, descanso o esfuerzo',
+  tecnica: 'Cambio de técnica', material: 'Máquina, apoyo o agarre', orden: 'Orden, descanso o esfuerzo',
   molestia: 'Molestia', habitos: 'Dieta o hábitos', nota: 'Nota',
 };
 const FEEL = { sueno: 'Sueño', recup: 'Recuperación', sens: 'Sensaciones' };
@@ -581,6 +594,9 @@ const DROP = 0.05; // caída del 1RM estimado a partir de la cual se pide explic
 const noteById = id => S.diary.find(n => n.id === id);
 const written = n => n.text.trim() !== '';
 const isChange = n => n.type !== 'nota';
+// Cambio a partir del cual se compara un ejercicio: lo anterior deja de contar para récords, caídas y progreso
+const baseNote = (exId, date = '9999') => S.diary.filter(n => n.exId === exId && n.reset && written(n) && n.date <= date).sort((a, b) => b.date.localeCompare(a.date))[0];
+const baseDate = (exId, date) => baseNote(exId, date)?.date || '';
 const pruneNotes = () => { S.diary = S.diary.filter(written); };
 const stopNote = () => { ui.editNote = null; pruneNotes(); };
 const notesFor = (date, exId) => S.diary.filter(n => n.date === date && n.exId === exId && (written(n) || n.id === ui.editNote));
@@ -597,7 +613,7 @@ function setCheckin(date, c) {
 
 function noteItem(n, opts = {}) {
   return `<button class="note" data-act="editNote" data-id="${n.id}">
-    <span class="note-top">${opts.num ? `<i class="mk">${opts.num}</i>` : ''}${noteTag(n)}${opts.ex ? `<b>${esc(n.exId ? exName(n.exId) : 'General')}</b>` : ''}${opts.date ? `<span class="muted">${esc(fmtDate(n.date))}</span>` : ''}</span>
+    <span class="note-top">${opts.num ? `<i class="mk">${opts.num}</i>` : ''}${noteTag(n)}${opts.ex ? `<b>${esc(n.exId ? exName(n.exId) : 'General')}</b>` : ''}${opts.date ? `<span class="muted">${esc(fmtDate(n.date))}</span>` : ''}${n.reset ? `<span class="base">Nueva referencia</span>` : ''}</span>
     <span class="note-text">${esc(n.text)}</span>${opts.extra || ''}</button>`;
 }
 // full: permite cambiar también la fecha y el ejercicio
@@ -611,6 +627,7 @@ function noteForm(n, full) {
         return list.length ? `<optgroup label="${l}">${list.map(e => `<option value="${e.id}" ${e.id === n.exId ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</optgroup>` : '';
       }).join('')}</select></label></div>` : ''}
     <div class="types" role="group" aria-label="Tipo de anotación">${types.map(([k, l]) => `<button class="${n.type === k ? 'active' : ''}" aria-pressed="${n.type === k}" data-act="noteType" data-id="${n.id}" data-t="${k}">${l}</button>`).join('')}</div>
+    ${n.exId && isChange(n) ? `<button class="switch" role="switch" aria-checked="${!!n.reset}" data-act="noteReset" data-id="${n.id}"><span><b>Comparar solo desde esta fecha</b><small>Lo anterior no cuenta para récords, caídas ni progreso</small></span><i aria-hidden="true"></i></button>` : ''}
     <textarea rows="3" data-field="ntext" data-id="${n.id}" aria-label="Anotación" placeholder="${n.exId ? 'p. ej. Bajo más lento y sin rebote, pecho apoyado' : 'p. ej. Empiezo déficit, cambio el orden de los ejercicios'}">${esc(n.text)}</textarea>
     <div class="ex-foot"><button class="btn small" data-act="closeNote">Listo</button>
       <button class="icon" data-act="delNote" data-id="${n.id}" aria-label="Borrar anotación"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button></div></div>`;
@@ -669,13 +686,13 @@ const changesFor = exId => S.diary.filter(n => written(n) && isChange(n) && (n.e
 // Fechas con cambios dentro del tramo de la gráfica, numeradas
 function changeMarks(pts, exId) {
   const ds = [...new Set(changesFor(exId).map(n => n.date))].filter(d => d >= pts[0].date && d <= pts[pts.length - 1].date);
-  return ds.slice(-9).map((date, i) => ({ date, num: i + 1 }));
+  return ds.slice(-9).map((date, i) => ({ date, num: i + 1, base: S.diary.some(n => n.exId === exId && n.reset && n.date === date && written(n)) }));
 }
 // Caídas del 1RM estimado frente a la media de hasta 3 sesiones previas, con lo anotado en ese periodo
 function findDrops(pts, exId) {
   const out = [];
   pts.forEach((p, i) => {
-    const ref = pts.slice(Math.max(0, i - 3), i);
+    const b = baseDate(exId, p.date), ref = pts.slice(0, i).filter(r => r.date >= b).slice(-3);
     if (!ref.length) return;
     const m = mean(ref.map(r => r.e1rm));
     if (!m || (p.e1rm - m) / m > -DROP) return;
@@ -686,21 +703,24 @@ function findDrops(pts, exId) {
   });
   return out;
 }
-function vChanges(pts, exId, marks, label, unit) {
+// pts: todo el historial; from: primera fecha que se está viendo
+function vChanges(pts, from, exId, marks, label, unit) {
   let h = '';
-  const drops = findDrops(pts, exId).slice(-4).reverse();
+  const drops = findDrops(pts, exId).filter(x => x.p.date >= from).slice(-4).reverse();
   if (drops.length) h += `<h3>Caídas recientes</h3><div class="list">` + drops.map(x => {
     const why = x.notes.map(n => `<div class="why">${noteTag(n)}${esc(n.text)}</div>`).join('') + [x.low, x.text].filter(Boolean).map(t => `<div class="why">${esc(t)}</div>`).join('');
     return `<div class="item drop"><div class="name"><b>${esc(fmtDate(x.p.date))} <em>${fmtPct(x.pct)}</em></b><span class="muted small">1RM est. ${fmtN(x.m)} → ${fmtN(x.p.e1rm)} kg</span>${why}</div>
       <button class="btn ghost small" data-act="explain" data-date="${x.p.date}" data-ex="${exId}">${why ? 'Añadir' : 'Anotar motivo'}</button></div>`;
-  }).join('') + `</div><p class="muted small" style="margin:4px 0 0">Sesiones un ${fmtN(DROP * 100)} % o más por debajo de la media de las 3 anteriores.</p>`;
+  }).join('') + `</div><p class="muted small" style="margin:4px 0 0">Sesiones un ${fmtN(DROP * 100)} % o más por debajo de la media de las 3 anteriores con la misma referencia.</p>`;
   const ch = changesFor(exId).reverse().slice(0, 8);
   if (ch.length) h += `<h3>Cambios anotados</h3><div class="notes">` + ch.map(n => {
-    const a = pts.filter(p => p.date < n.date).slice(-3).map(p => p[ui.metric]), b = pts.filter(p => p.date >= n.date).slice(0, 3).map(p => p[ui.metric]);
+    // Nunca se mezclan sesiones de antes y después de una nueva referencia
+    const b0 = baseDate(exId, n.date), b1 = S.diary.filter(x => x.exId === exId && x.reset && written(x) && x.date > n.date).map(x => x.date).sort()[0] || '9999';
+    const a = pts.filter(p => p.date >= b0 && p.date < n.date).slice(-3).map(p => p[ui.metric]), b = pts.filter(p => p.date >= n.date && p.date < b1).slice(0, 3).map(p => p[ui.metric]);
     const ma = a.length ? mean(a) : 0, mb = b.length ? mean(b) : 0;
-    const extra = ma && b.length ? `<span class="eff">${label}: ${fmtN(ma)} → ${fmtN(mb)}${unit ? ' ' + unit : ''} <b class="${mb < ma ? 'down' : 'up'}">${fmtPct((mb - ma) / ma)}</b></span>` : '';
+    const extra = n.reset ? '' : ma && b.length ? `<span class="eff">${label}: ${fmtN(ma)} → ${fmtN(mb)}${unit ? ' ' + unit : ''} <b class="${mb < ma ? 'down' : 'up'}">${fmtPct((mb - ma) / ma)}</b></span>` : '';
     return noteItem(n, { num: marks.find(m => m.date === n.date)?.num, date: true, ex: !n.exId, extra });
-  }).join('') + `</div><p class="muted small" style="margin:8px 0 0">Compara la media de hasta 3 sesiones antes y 3 desde el cambio. Que coincidan no demuestra que sea la causa.</p>`;
+  }).join('') + `</div><p class="muted small" style="margin:8px 0 0">Compara la media de hasta 3 sesiones antes y 3 desde el cambio, sin cruzar una nueva referencia. Que coincidan no demuestra que sea la causa.</p>`;
   return h;
 }
 
@@ -755,7 +775,7 @@ function vHoy() {
         <button class="icon" data-act="delEntry" data-i="${i}" aria-label="Quitar">✕</button>
       </div>
       <div class="last">${last
-        ? `Última vez (${esc(fmtDate(last.date))}): <b>${last.sets.map(x => `${fmtN(x.w || 0)}×${x.r}`).join(' · ')}</b>`
+        ? `Última vez (${esc(fmtDate(last.date))}${last.date < baseDate(en.exId, d) ? ', antes del cambio' : ''}): <b>${last.sets.map(x => `${fmtN(x.w || 0)}×${x.r}`).join(' · ')}</b>`
         : 'Primera vez con este ejercicio'}</div>
       ${ch ? `<div class="remind">${esc(fmtDate(ch.date))}: ${esc(ch.text)}</div>` : ''}
       ${en.sets.map((x, j) => setRow(en, x, i, j, last, prev)).join('')}
@@ -935,7 +955,7 @@ function vProg() {
       const l = withHist.filter(e => e.muscle === k);
       return l.length ? `<optgroup label="${n}">${l.map(e => `<option value="${e.id}" ${e.id === ui.progEx ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</optgroup>` : '';
     }).join('')}</select>`;
-    const pts = [];
+    let pts = [];
     for (const s of [...S.sessions].sort((a, b) => a.date.localeCompare(b.date))) {
       const sets = s.entries.filter(e => e.exId === ui.progEx).flatMap(e => e.sets.filter(valid));
       if (!sets.length) continue;
@@ -948,6 +968,13 @@ function vProg() {
         rmax: Math.max(...sets.map(x => x.r)),
         vol: sets.reduce((a, x) => a + (x.w || 0) * x.r, 0),
       });
+    }
+    const base = baseNote(ui.progEx), allPts = pts;
+    if (base) {
+      const since = pts.filter(p => p.date >= base.date);
+      h += `<div class="seg"><button class="${ui.fromBase ? 'active' : ''}" data-act="fromBase" data-v="1">Desde el cambio (${esc(fmtDate(base.date))})</button><button class="${ui.fromBase ? '' : 'active'}" data-act="fromBase" data-v="0">Todo el historial</button></div>`;
+      if (ui.fromBase && since.length) pts = since;
+      else if (ui.fromBase) h += `<p class="muted small" style="margin:0">Aún no hay sesiones desde el cambio; de momento ves todo el historial.</p>`;
     }
     const topE = pts.reduce((a, p) => p.e1rm > a.e1rm ? p : a, pts[0]);
     const topW = pts.reduce((a, p) => p.wmax > a.wmax ? p : a, pts[0]);
@@ -962,7 +989,7 @@ function vProg() {
     h += chart(pts, ui.metric, marks);
     h += `<table><tr><th>Fecha</th><th>Mejor serie</th><th>Series</th><th>1RM est.</th><th>Volumen</th></tr>
       ${pts.slice(-8).reverse().map(p => `<tr><td>${esc(fmtDate(p.date))}</td><td><b>${fmtN(p.best.w || 0)}×${p.best.r}</b></td><td>${p.n}</td><td>${fmtN(p.e1rm)}</td><td>${fmtK(p.vol)}</td></tr>`).join('')}</table>`;
-    h += vChanges(pts, ui.progEx, marks, ...M[ui.metric]);
+    h += vChanges(allPts, pts[0].date, ui.progEx, marks, ...M[ui.metric]);
   }
   h += `</div>`;
 
@@ -1004,7 +1031,7 @@ function chart(pts, key, marks = []) {
     const x = X(parseYmd(mk.date).getTime());
     up = x - px < 18 && !up; px = x;
     const y = up ? 9 : 26;
-    g += `<line class="mark" x1="${x}" x2="${x}" y1="${y}" y2="${H - pb}"/><circle class="mark" cx="${x}" cy="${y}" r="7.5"/><text class="mark" x="${x}" y="${y + 3.2}" text-anchor="middle">${mk.num}</text>`;
+    g += `<line class="mark${mk.base ? ' base' : ''}" x1="${x}" x2="${x}" y1="${y}" y2="${H - pb}"/><circle class="mark" cx="${x}" cy="${y}" r="7.5"/><text class="mark" x="${x}" y="${y + 3.2}" text-anchor="middle">${mk.num}</text>`;
   }
   const d = pts.map((p, i) => `${i ? 'L' : 'M'}${X(xs[i]).toFixed(1)},${Y(p[key]).toFixed(1)}`).join(' ');
   const dots = pts.map((p, i) => `<circle cx="${X(xs[i]).toFixed(1)}" cy="${Y(p[key]).toFixed(1)}" r="3.5" fill="var(--card)" stroke="var(--accent)" stroke-width="2"><title>${esc(fmtDate(p.date))}: ${fmtN(p[key])}</title></circle>`).join('');
@@ -1039,7 +1066,7 @@ function backupFile() {
 function markBackup() { S.meta.lastBackup = today(); save(); render(); toast('Copia exportada'); }
 
 function focusNote() { const i = document.querySelector('[data-field=ntext]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
-function startNote(n) { stopNote(); n = { id: uid(), text: '', ...n }; S.diary.push(n); ui.editNote = n.id; render(); focusNote(); }
+function startNote(n) { stopNote(); n = { id: uid(), text: '', ...n, reset: !!n.exId && n.type === 'tecnica' }; S.diary.push(n); ui.editNote = n.id; render(); focusNote(); }
 
 const A = {
   tab: t => { stopNote(); ui.tab = t.dataset.tab; if (ui.tab === 'hoy') ui.date = ui.date || today(); render(); scrollTo(0, 0); },
@@ -1162,7 +1189,9 @@ const A = {
     render(); if (ui.tab === 'diario') scrollTo(0, 0);
     focusNote();
   },
-  noteType: t => { noteById(t.dataset.id).type = t.dataset.t; save(); render(); },
+  noteType: t => { const n = noteById(t.dataset.id); n.type = t.dataset.t; n.reset = !!n.exId && n.type === 'tecnica'; save(); render(); },
+  noteReset: t => { const n = noteById(t.dataset.id); n.reset = !n.reset; save(); render(); },
+  fromBase: t => { ui.fromBase = t.dataset.v === '1'; render(); },
   closeNote: () => { stopNote(); save(); render(); },
   delNote: t => {
     const n = noteById(t.dataset.id);
@@ -1231,7 +1260,7 @@ document.addEventListener('change', e => {
   else if (f === 'week') { P().week[+t.dataset.d] = t.value || null; save(); }
   else if (f === 'exMuscle') { exById(t.dataset.id).muscle = t.value; save(); render(); }
   else if (f === 'ndate') { if (t.value) { noteById(t.dataset.id).date = t.value; save(); } }
-  else if (f === 'nex') { const n = noteById(t.dataset.id); n.exId = t.value || null; if (n.exId && n.type === 'habitos') n.type = 'tecnica'; save(); render(); }
+  else if (f === 'nex') { const n = noteById(t.dataset.id); n.exId = t.value || null; if (n.exId && n.type === 'habitos') n.type = 'tecnica'; n.reset = !!n.exId && n.type === 'tecnica'; save(); render(); }
   else if (f === 'diaryEx') { ui.diaryEx = t.value; render(); }
   else if (f === 'progEx') { ui.progEx = t.value; render(); }
   else if (f === 'rname' || f === 'pname') { if (f === 'pname' && !t.value.trim()) P().name = 'Sin nombre'; save(); render(); } // refresca los selectores
